@@ -93,7 +93,11 @@ body='
 ';
 footer='</ul></body></html>';
 
-if [ "$1" ]; then MONTHLY=$1; fi #format eg. 2019-01
+if [ "$1" ]; then #format eg. 2019-01
+    _m=$(echo "$1" | grep -E '^[0-9\-]{7}')
+    if [ ! "$_m" = '' ]; then MONTHLY=$_m; fi
+    echo $MONTHLY
+fi
 
 al_get_irclog() {
     for log in devel linux commits; do
