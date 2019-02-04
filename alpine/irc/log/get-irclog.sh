@@ -38,7 +38,28 @@ _tmpf='/tmp/_tmp_alpine.log'
 rm -f ${_tmpf}; touch ${_tmpf}
 echo -e ${cbCYAN}${cYELLOW}${NOW}' '${cNORMAL}
 
-SVGColors="aliceblue antiquewhite aqua aquamarine azure beige bisque blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue crimson cyan darkblue darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkturquoise darkviolet deeppink deepskyblue dimgray dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow honeydew hotpink indianred khaki lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightsteelblue lime limegreen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachbuff peru pink plum powderblue purple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen"
+SVGColors="aliceblue antiquewhite aqua aquamarine azure beige bisque
+           blanchedalmond blue blueviolet brown burlywood cadetblue
+	   chartreuse chocolate coral cornflowerblue crimson cyan darkblue
+	   darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta
+	   darkolivegreen darkorange darkorchid darkred darksalmon
+	   darkseagreen darkslateblue darkturquoise darkviolet deeppink
+	   deepskyblue dimgray dodgerblue firebrick floralwhite forestgreen
+	   fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow
+	   honeydew hotpink indianred khaki lavenderblush lawngreen
+	   lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow
+	   lightgreen lightgrey lightpink lightsalmon lightseagreen
+	   lightskyblue lightslategray lightsteelblue lime limegreen magenta
+	   maroon mediumaquamarine mediumblue mediumorchid mediumpurple
+	   mediumseagreen mediumslateblue mediumspringgreen mediumturquoise
+	   mediumvioletred mintcream mistyrose moccasin navajowhite navy
+	   oldlace olive olivedrab orange orangered orchid palegoldenrod
+	   palegreen paleturquoise palevioletred papayawhip peachbuff peru
+	   pink plum powderblue purple red rosybrown royalblue saddlebrown
+	   salmon sandybrown seagreen seashell sienna silver skyblue slateblue
+	   slategray snow springgreen steelblue tan teal thistle tomato
+	   turquoise violet wheat white whitesmoke yellow yellowgreen
+	   "
 
 header='
 <!DOCTYPE html><html><head>
@@ -77,7 +98,8 @@ if [ "$1" ]; then MONTHLY=$1; fi #format eg. 2019-01
 al_get_irclog() {
     for log in devel linux commits; do
         file=${URL}"%23alpine-$log-$MONTHLY.log";
-        echo -e "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} ------------------------------"
+        echo -ne "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} "
+        echo "------------------------------"
 
         wget -c $file
         _CURRLF="#alpine-$log-$MONTHLY.log"
@@ -146,14 +168,14 @@ al_irclog2html() {
 }
 
 usage() {
-echo -e ${cGREEN};
+    echo -e ${cGREEN};
     cat <<-__EOF__
         usage: get-irclogs
 
         Download IRC logs from Alpine Linux, and
         create a html format of the log
 __EOF__
-echo -e ${cNORMAL};
+    echo -e ${cNORMAL};
     exit 1
 }
 
