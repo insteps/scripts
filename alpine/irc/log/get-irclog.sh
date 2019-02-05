@@ -34,6 +34,8 @@ VERSION=0.0.1
 NOW=$(date +%Y%m%d-%H%M%S-%s)
 MONTHLY=$(date +%Y-%m)
 URL=https://dev.alpinelinux.org/irclogs/
+LOGTYPE='devel linux commits'
+
 _tmpf='/tmp/_tmp_alpine.log'
 rm -f ${_tmpf}; touch ${_tmpf}
 echo -e ${cbCYAN}${cYELLOW}${NOW}' '${cNORMAL}
@@ -100,25 +102,22 @@ if [ "$1" ]; then #format eg. 2019-01
 fi
 
 al_get_irclog() {
-    for log in devel linux commits; do
+    for log in ${LOGTYPE}; do
         file=${URL}"%23alpine-$log-$MONTHLY.log";
         echo -ne "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} "
         echo "------------------------------"
-
         wget -c $file
-        _CURRLF="#alpine-$log-$MONTHLY.log"
-        if [ -f ${_CURRLF} ]; then
-            al_irclog2html ${_CURRLF} ${_tmpf}
-        else
-            continue
-        fi
-
     done;
 }
 
 al_irclog2html() {
-        rm -f ${_tmpf}; cp ${_CURRLF} ${_tmpf}; 
-        num=0;
+    for log in ${LOGTYPE}; do
+        _CURRLF="#alpine-$log-$MONTHLY.log"
+        if [ ! -f ${_CURRLF} ]; then continue; fi
+        echo '' > ${_tmpf}
+
+        cp ${_CURRLF} ${_tmpf}
+        num=0
         lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
         for name in ${lnames}; do
             _name=${name}
@@ -126,8 +125,7 @@ al_irclog2html() {
             num=$(($num+1))
         done
 
-        _logfile="$1"; _tmpf=$2;
-        _outf=$(echo ${_logfile} | cut -b2-).html
+        _outf=$(echo ${_CURRLF} | cut -b2-).html
         # _outf=/path/to/htdocs/${_outf}
 
         echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
@@ -167,6 +165,7 @@ al_irclog2html() {
         cat ${_tmpf} >> ${_outf}
         echo $footer >> ${_outf}
 
+    done;
 }
 
 usage() {
@@ -185,6 +184,7 @@ if [ "$1" = "help" ]; then
     usage
 else
     al_get_irclog
+    al_irclog2html
 fi
 
 
