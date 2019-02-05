@@ -35,10 +35,7 @@ NOW=$(date +%Y%m%d-%H%M%S-%s)
 MONTHLY=$(date +%Y-%m)
 URL=https://dev.alpinelinux.org/irclogs/
 LOGTYPE='devel linux commits'
-
 _tmpf='/tmp/_tmp_alpine.log'
-rm -f ${_tmpf}; touch ${_tmpf}
-echo -e ${cbCYAN}${cYELLOW}${NOW}' '${cNORMAL}
 
 SVGColors="aliceblue antiquewhite aqua aquamarine azure beige bisque
            blanchedalmond blue blueviolet brown burlywood cadetblue
@@ -95,77 +92,61 @@ body='
 ';
 footer='</ul></body></html>';
 
-if [ "$1" ]; then #format eg. 2019-01
-    _m=$(echo "$1" | grep -E '^[0-9\-]{7}')
-    if [ ! "$_m" = '' ]; then MONTHLY=$_m; fi
-    echo $MONTHLY
-fi
-
 al_get_irclog() {
-    for log in ${LOGTYPE}; do
-        file=${URL}"%23alpine-$log-$MONTHLY.log";
-        echo -ne "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} "
-        echo "------------------------------"
-        wget -c $file
-    done;
+    file=${URL}"%23alpine-$log-$MONTHLY.log";
+    echo -ne "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} "
+    echo "------------------------------"
+    wget -c $file
 }
 
 al_irclog2html() {
-    for log in ${LOGTYPE}; do
-        _CURRLF="#alpine-$log-$MONTHLY.log"
-        if [ ! -f ${_CURRLF} ]; then continue; fi
-        echo '' > ${_tmpf}
+    num=0
+    lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
+    for name in ${lnames}; do
+        _name=${name}
+        sed -E -i -e "s|${name}|__${num}${_name}|g" ${_tmpf}
+        num=$(($num+1))
+    done
 
-        cp ${_CURRLF} ${_tmpf}
-        num=0
-        lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
-        for name in ${lnames}; do
-            _name=${name}
-            sed -E -i -e "s|${name}|__${num}${_name}|g" ${_tmpf}
-            num=$(($num+1))
-        done
+    _outf=$(echo ${_CURRLF} | cut -b2-).html
+    # _outf=/path/to/htdocs/${_outf}
 
-        _outf=$(echo ${_CURRLF} | cut -b2-).html
-        # _outf=/path/to/htdocs/${_outf}
+    echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
+    rm -f ${_outf}
+    touch $_outf
 
-        echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
-        rm -f ${_outf}
-        touch $_outf
+    echo ${header} > ${_outf}
+    echo ${title} >> ${_outf}
+    echo ${style} >> ${_outf}
+    echo ${body} >> ${_outf}
 
-        echo ${header} > ${_outf}
-        echo ${title} >> ${_outf}
-        echo ${style} >> ${_outf}
-        echo ${body} >> ${_outf}
+    echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
+    sed -i \
+        -e 's|&|\&amp;|g' \
+        -e 's|>|\&gt;|g' \
+        -e 's|<|\&lt;|g' \
+        -e 's|^|<li><span>|' \
+        -e 's|gt\; |gt;</span><span>|' \
+        -e 's|$|</span></li>|' \
+        ${_tmpf}
+    sed -E -i -e "s|([0-9]) &lt;(\w)|\1 __120\&lt;\2|" \
+        ${_tmpf} #handle quirks
+    sed -E -i -e "s|([0-9]) &lt;(\[)|\1 __120\&lt;\2|" \
+        ${_tmpf} #handle quirks
 
-        echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
-        sed -i \
-            -e 's|&|\&amp;|g' \
-            -e 's|>|\&gt;|g' \
-            -e 's|<|\&lt;|g' \
-            -e 's|^|<li><span>|' \
-            -e 's|gt\; |gt;</span><span>|' \
-            -e 's|$|</span></li>|' \
+    _colorstr="<span style="
+    sed -E -i -e "s|([0-9]) (__[0-9])|\1</span>${_colorstr}\2|" \
+        ${_tmpf}
+
+    num=0
+    for color in ${SVGColors}; do
+        str="style=__${num}"
+        num=$(($num+1))
+        sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|g" \
             ${_tmpf}
-        sed -E -i -e "s|([0-9]) &lt;(\w)|\1 __120\&lt;\2|" \
-            ${_tmpf} #handle quirks
-        sed -E -i -e "s|([0-9]) &lt;(\[)|\1 __120\&lt;\2|" \
-            ${_tmpf} #handle quirks
-
-        _colorstr="<span style="
-        sed -E -i -e "s|([0-9]) (__[0-9])|\1</span>${_colorstr}\2|" \
-            ${_tmpf}
-
-        num=0
-        for color in ${SVGColors}; do
-            str="style=__${num}"
-            num=$(($num+1))
-            sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|g" \
-                ${_tmpf}
-        done
-        cat ${_tmpf} >> ${_outf}
-        echo $footer >> ${_outf}
-
-    done;
+    done
+    cat ${_tmpf} >> ${_outf}
+    echo $footer >> ${_outf}
 }
 
 usage() {
@@ -180,11 +161,22 @@ __EOF__
     exit 1
 }
 
+if [ "$1" ]; then #format eg. 2019-01
+    _m=$(echo "$1" | grep -E '^[0-9\-]{7}')
+    if [ ! "$_m" = '' ]; then MONTHLY=$_m; fi
+fi
+
 if [ "$1" = "help" ]; then
     usage
 else
-    al_get_irclog
-    al_irclog2html
+    echo -e ${cbCYAN}${cYELLOW}${NOW}' '${cNORMAL}
+    for log in ${LOGTYPE}; do
+        _CURRLF="#alpine-$log-$MONTHLY.log"
+        al_get_irclog
+        if [ ! -f ${_CURRLF} ]; then continue; fi
+        echo '' > ${_tmpf}
+        cp ${_CURRLF} ${_tmpf}
+        al_irclog2html
+    done;
 fi
-
 
