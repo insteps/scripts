@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
-# @category  sh, sed, awk
+# @category  sh, sed, awk, grep
 # @author    V.Krishn <vkrishn4@gmail.com>
 # @copyright Copyright (c) 2019 V.Krishn <vkrishn4@gmail.com>
 # @license   GPL
@@ -109,17 +109,15 @@ al_get_irclog() {
         _CURRLF="#alpine-$log-$MONTHLY.log"
         if [ -f ${_CURRLF} ]; then
             al_irclog2html ${_CURRLF} ${_tmpf}
+        else
+            continue
         fi
 
     done;
 }
 
 al_irclog2html() {
-        _CURRLF="#alpine-$log-$MONTHLY.log"
-        if [ -f ${_CURRLF} ]; then
-            cp ${_CURRLF} ${_tmpf}; else continue
-        fi
-
+        rm -f ${_tmpf}; cp ${_CURRLF} ${_tmpf}; 
         num=0;
         lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
         for name in ${lnames}; do
