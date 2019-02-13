@@ -138,6 +138,10 @@ al_irclog2html() {
     sed -E -i -e "s|([0-9]) (__[0-9])|\1</span>${_colorstr}\2|" \
         ${_tmpf}
 
+    # handle populous chatty channel
+    if [ $num -gt 120 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
+    if [ $num -gt 240 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
+
     num=0
     for color in ${SVGColors}; do
         str="style=__${num}"
