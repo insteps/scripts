@@ -108,18 +108,6 @@ al_irclog2html() {
         num=$(($num+1))
     done
 
-    _outf=$(echo ${_CURRLF} | cut -b2-).html
-    # _outf=/path/to/htdocs/${_outf}
-
-    echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
-    rm -f ${_outf}
-    touch $_outf
-
-    echo ${header} > ${_outf}
-    echo ${title} >> ${_outf}
-    echo ${style} >> ${_outf}
-    echo ${body} >> ${_outf}
-
     echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
     sed -i \
         -e 's|&|\&amp;|g' \
@@ -149,19 +137,29 @@ al_irclog2html() {
         sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|g" \
             ${_tmpf}
     done
+
+    _outf=$(echo ${_CURRLF} | cut -b2-).html
+    # _outf=/path/to/htdocs/${_outf}
+
+    echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
+    rm -f ${_outf}; touch $_outf
+    echo ${header} > ${_outf}
+    echo ${title} >> ${_outf}
+    echo ${style} >> ${_outf}
+    echo ${body} >> ${_outf}
     cat ${_tmpf} >> ${_outf}
     echo $footer >> ${_outf}
 }
 
 usage() {
-    echo -e ${cGREEN};
+    echo -e ${cGREEN}
     cat <<-__EOF__
         usage: get-irclogs
 
         Download IRC logs from Alpine Linux, and
         create a html format of the log
 __EOF__
-    echo -e ${cNORMAL};
+    echo -e ${cNORMAL}
     exit 1
 }
 
