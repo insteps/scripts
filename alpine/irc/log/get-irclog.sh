@@ -68,8 +68,8 @@ header='
 title='<title>alpine-irclog</title>';
 style=$(cat <<EOT
 <style type="text/css">
-body { font-family:Arial,Helvetica,sans-serif; font-size: 1em; }
-ul { width: 98%; margin: 0px; padding: 0px; background-color: black; }
+body { font-family:Arial,Helvetica,sans-serif; font-size: 1em; background-color: black; }
+ul { width: 98%; margin: 0px; padding: 0px; }
 ul li { padding: 3px; list-style: none; list-style-type: none;
         margin: 0px; padding: 0px; border: 1px solid black; }
 ul li span:first-child, 
@@ -79,7 +79,6 @@ ul li span:nth-child(2) {
   float: left; padding: 2px; width: 100pt;
 }
 ul li span:nth-child(2) { width: 90pt; }
-li:nth-child(odd) { background-color: black; }
 li:nth-child(even) { background-color: #282828; }
 ul li span:last-child { color: beige; display: block; margin: 0px 0px; }
 </style>
