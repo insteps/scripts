@@ -39,7 +39,7 @@ _tmpf='/tmp/_tmp_alpine.log'
 
 SVGColors="aliceblue antiquewhite aqua aquamarine azure beige bisque
            blanchedalmond blue blueviolet brown burlywood cadetblue
-	   chartreuse chocolate coral cornflowerblue crimson cyan darkblue
+	   chartreuse chocolate coral cornflowerblue crimson cyan
 	   darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta
 	   darkolivegreen darkorange darkorchid darkred darksalmon
 	   darkseagreen darkslateblue darkturquoise darkviolet deeppink
