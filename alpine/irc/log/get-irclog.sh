@@ -68,7 +68,8 @@ header='
 title='<title>alpine-irclog</title>';
 style=$(cat <<EOT
 <style type="text/css">
-body { font-family:Arial,Helvetica,sans-serif; font-size: 1em; background-color: black; }
+body { font-family:Arial,Helvetica,sans-serif;
+       font-size: 1em; background-color: black; }
 ul { width: 98%; margin: 0px; padding: 0px; }
 ul li { padding: 3px; list-style: none; list-style-type: none;
         margin: 0px; padding: 0px; border: 1px solid black; }
