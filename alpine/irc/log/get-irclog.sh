@@ -104,7 +104,7 @@ al_irclog2html() {
     lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
     for name in ${lnames}; do
         _name=${name}
-        sed -E -i -e "s|${name}|__${num}${_name}|g" ${_tmpf}
+        sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
         num=$(($num+1))
     done
 
@@ -134,7 +134,7 @@ al_irclog2html() {
     for color in ${SVGColors}; do
         str="style=__${num}"
         num=$(($num+1))
-        sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|g" \
+        sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|" \
             ${_tmpf}
     done
 
