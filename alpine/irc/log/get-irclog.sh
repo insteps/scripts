@@ -37,7 +37,7 @@ URL=https://dev.alpinelinux.org/irclogs/
 LOGTYPE='devel linux commits'
 _tmpf='/tmp/_tmp_alpine.log'
 
-SVGColors="aliceblue antiquewhite aqua aquamarine azure beige bisque
+SVGColors="aliceblue antiquewhite aqua aquamarine beige bisque
            blanchedalmond blue blueviolet brown burlywood cadetblue
 	   chartreuse chocolate coral cornflowerblue crimson cyan
 	   darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta
