@@ -72,7 +72,7 @@ body { font-family:Arial,Helvetica,sans-serif;
        font-size: 1em; background-color: black; }
 ul { width: 98%; margin: 0px; padding: 0px; }
 ul li { padding: 3px; list-style: none; list-style-type: none;
-        margin: 0px; padding: 0px; border: 1px solid black; }
+        margin: 0px; padding: 0px; border: 1px solid black; clear: both; }
 ul li span:first-child, 
 ul li span:nth-child(2) {
   white-space: nowrap; font-weight: bold; font-size: .8em;
