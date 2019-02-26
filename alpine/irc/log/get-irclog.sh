@@ -51,7 +51,7 @@ SVGColors="aliceblue antiquewhite aqua aquamarine beige bisque
 	   lightskyblue lightslategray lightsteelblue lime limegreen magenta
 	   maroon mediumaquamarine mediumblue mediumorchid mediumpurple
 	   mediumseagreen mediumslateblue mediumspringgreen mediumturquoise
-	   mediumvioletred mintcream mistyrose moccasin navajowhite navy
+	   mediumvioletred mintcream mistyrose moccasin navajowhite 
 	   oldlace olive olivedrab orange orangered orchid palegoldenrod
 	   palegreen paleturquoise palevioletred papayawhip peachbuff peru
 	   pink plum powderblue purple red rosybrown royalblue saddlebrown
