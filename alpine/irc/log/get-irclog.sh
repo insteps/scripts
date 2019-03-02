@@ -34,7 +34,7 @@ VERSION=0.0.1
 NOW=$(date +%Y%m%d-%H%M%S-%s)
 MONTHLY=$(date +%Y-%m)
 URL=https://dev.alpinelinux.org/irclogs/
-LOGTYPE='devel linux commits'
+LOGTYPE='devel linux commits docs'
 _tmpf='/tmp/_tmp_alpine.log'
 
 SVGColors="aliceblue antiquewhite aqua aquamarine beige bisque
