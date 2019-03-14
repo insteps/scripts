@@ -104,6 +104,8 @@ al_irclog2html() {
     lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
     for name in ${lnames}; do
         _name=${name}
+        name=$(echo $name | sed 's|\[|\\[|g')
+        name=$(echo $name | sed 's|\]|\\]|g')
         # sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
         sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) ${name}|\1 \2 __${num}${_name}|" \
             ${_tmpf}
@@ -118,10 +120,6 @@ al_irclog2html() {
         -e 's|gt\; |gt;</span><span>|' \
         -e 's|$|</span></li>|' \
         ${_tmpf}
-    sed -E -i -e "s|([0-9]) &lt;(\w)|\1 __120\&lt;\2|" \
-        ${_tmpf} #handle quirks
-    sed -E -i -e "s|([0-9]) &lt;(\[)|\1 __120\&lt;\2|" \
-        ${_tmpf} #handle quirks
 
     _colorstr="<span style="
     sed -E -i -e "s|([0-9]) (__[0-9])|\1</span>${_colorstr}\2|" \
