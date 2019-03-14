@@ -104,11 +104,12 @@ al_irclog2html() {
     lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
     for name in ${lnames}; do
         _name=${name}
-        sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
+        # sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
+        sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) ${name}|\1 \2 __${num}${_name}|" \
+            ${_tmpf}
         num=$(($num+1))
     done
 
-    echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
     sed -i \
         -e 's|&|\&amp;|g' \
         -e 's|>|\&gt;|g' \
@@ -176,6 +177,7 @@ else
         _CURRLF="#alpine-$log-$MONTHLY.log"
         al_get_irclog
         if [ ! -f ${_CURRLF} ]; then continue; fi
+        echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
         echo '' > ${_tmpf}
         cp ${_CURRLF} ${_tmpf}
         al_irclog2html
