@@ -104,7 +104,7 @@ al_irclog2html() {
     lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
     for name in ${lnames}; do
         _name=${name}
-        name=$(echo $name | sed 's|\[|\\[|g')
+        name=$(echo $name | sed 's|\[|\\[|g') # sed > v4.4 or busybox > v1.27
         name=$(echo $name | sed 's|\]|\\]|g')
         # sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
         sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) ${name}|\1 \2 __${num}${_name}|" \
