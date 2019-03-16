@@ -105,7 +105,7 @@ al_irclog2html() {
     for name in ${lnames}; do
         _name=${name}
         name=$(echo $name | sed 's|\[|\\[|g') # sed > v4.4 or busybox > v1.27
-        name=$(echo $name | sed 's|\]|\\]|g')
+        name=$(echo $name | sed 's|\]|\\]|g') # ? # TODO
         # sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
         sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) ${name}|\1 \2 __${num}${_name}|" \
             ${_tmpf}
@@ -153,10 +153,12 @@ al_irclog2html() {
 usage() {
     echo -e ${cGREEN}
     cat <<-__EOF__
-        usage: get-irclogs
+        usage: get-irclogs [yyyy-mm]
 
         Download IRC logs from Alpine Linux, and
         create a html format of the log
+
+        yyyy-mm - format eg. 2019-01
 __EOF__
     echo -e ${cNORMAL}
     exit 1
