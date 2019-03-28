@@ -99,7 +99,7 @@ al_get_irclog() {
     wget -c $file
 }
 
-al_irclog2html() {
+_al_irclog2html() {
     num=0
     lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
     for name in ${lnames}; do
@@ -108,7 +108,6 @@ al_irclog2html() {
         name=$(echo $name | sed -E 's|\]|\\]|g') # ? # TODO
         name=$(echo $name | sed -E 's|\^|\\^|g')
         name=$(echo $name | sed -E 's/\|/\\|/g')
-        # sed -E -i -e "s|${name}|__${num}${_name}|" ${_tmpf}
         sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) (${name})|\1 \2 __${num}\3|" \
             ${_tmpf}
         num=$(($num+1))
@@ -139,7 +138,10 @@ al_irclog2html() {
         sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|" \
             ${_tmpf}
     done
+}
 
+al_irclog2html() {
+    _al_irclog2html
     _outf=$(echo ${_CURRLF} | cut -b2-).html
     # _outf=/path/to/htdocs/${_outf}
 
