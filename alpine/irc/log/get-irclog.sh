@@ -100,43 +100,32 @@ al_get_irclog() {
 }
 
 _al_irclog2html() {
-    num=0
-    lnames=$(awk '{print $3}' ${_CURRLF} | sort | uniq )
-    for name in ${lnames}; do
-        _name=${name}
-        name=$(echo $name | sed -E 's|\[|\\[|g') # sed > v4.4 or busybox > v1.27
-        name=$(echo $name | sed -E 's|\]|\\]|g') # ? # TODO
-        name=$(echo $name | sed -E 's|\^|\\^|g')
-        name=$(echo $name | sed -E 's/\|/\\|/g')
-        sed -E -i "s|^(2[0-9\-]+{9}) ([0-9\:]+{8}) (${name})|\1 \2 __${num}\3|" \
-            ${_tmpf}
-        num=$(($num+1))
-    done
-
     sed -i \
         -e 's|&|\&amp;|g' \
         -e 's|>|\&gt;|g' \
         -e 's|<|\&lt;|g' \
         -e 's|^|<li><span>|' \
-        -e 's|gt\; |gt;</span><span>|' \
+        -e 's|gt\; |gt; </span><span>|' \
         -e 's|$|</span></li>|' \
         ${_tmpf}
 
-    _colorstr="<span style="
-    sed -E -i -e "s|([0-9]) (__[0-9])|\1</span>${_colorstr}\2|" \
-        ${_tmpf}
-
+    num=1
+    lnames=$(awk '{print $3}' ${_tmpf} | sort | uniq )
+    maxname=$(echo $lnames | wc -w)
     # handle populous chatty channel
-    if [ $num -gt 120 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
-    if [ $num -gt 240 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
-    if [ $num -gt 480 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
-
-    num=0
-    for color in ${SVGColors}; do
-        str="style=__${num}"
-        num=$(($num+1))
-        sed -E -i -e "s|${str}&lt|style=\'color\:${color}\'\>\&lt|" \
+    if [ $maxname -gt 120 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
+    if [ $maxname -gt 240 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
+    if [ $maxname -gt 480 ]; then SVGColors="${SVGColors} ${SVGColors}"; fi
+    for name in ${lnames}; do
+        _name=${name}
+        name=$(echo $name | sed -E 's|\[|\\[|g') # sed > v4.4 or busybox > v1.27
+        name=$(echo $name | sed -E 's|\^|\\^|g')
+        name=$(echo $name | sed -E 's/\|/\\|/g')
+        color=$(echo $SVGColors | awk -v num=$num '{print $num}')
+        _colorstr="</span><span style='color:${color}'>"
+        sed -E -i "s|^(<li><span>2[0-9\-]+{9}) ([0-9\:]+{8}) (${name})|\1 \2 ${_colorstr}\3|" \
             ${_tmpf}
+        num=$(($num+1))
     done
 }
 
