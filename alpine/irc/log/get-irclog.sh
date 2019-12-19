@@ -82,6 +82,9 @@ ul li span:nth-child(2) {
 ul li span:nth-child(2) { width: 90pt; }
 li:nth-child(even) { background-color: #282828; }
 ul li span:last-child { color: beige; display: block; margin: 0px 0px; }
+@media (max-width: 640px) {
+  ul li span:nth-child(3) { display: block; clear: both; padding-left: 12px; }
+}
 </style>
 </head>
 EOT
