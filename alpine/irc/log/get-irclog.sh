@@ -65,7 +65,6 @@ header='
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ';
-title='<title>alpine-irclog</title>';
 style=$(cat <<EOT
 <style type="text/css">
 body { font-family:Arial,Helvetica,sans-serif;
@@ -140,6 +139,7 @@ al_irclog2html() {
     echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
     rm -f ${_outf}; touch $_outf
     echo ${header} > ${_outf}
+    title='<title>alpine-irclog-'${1}'</title>';
     echo ${title} >> ${_outf}
     echo ${style} >> ${_outf}
     echo ${body} >> ${_outf}
@@ -177,7 +177,7 @@ else
         echo -e "${cGREEN}>>> processing temp log:${cNORMAL} ${_tmpf}"
         echo '' > ${_tmpf}
         cp ${_CURRLF} ${_tmpf}
-        al_irclog2html
+        al_irclog2html "$log-$MONTHLY"
     done;
 fi
 
