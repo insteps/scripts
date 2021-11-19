@@ -15,7 +15,7 @@
 # 
 # @category  sh, sed, awk, grep
 # @author    V.Krishn <vkrishn4@gmail.com>
-# @copyright Copyright (c) 2019 V.Krishn <vkrishn4@gmail.com>
+# @copyright Copyright (c) 2019-2021 V.Krishn <vkrishn4@gmail.com>
 # @license   GPL
 # @link      http://github.com/insteps/scripts
 # 
@@ -29,36 +29,40 @@
 # . ../../../bash/inc/date.inc
 
 PROGRAM=get-irclog
-VERSION=0.0.1
+VERSION=0.0.2
 
 NOW=$(date +%Y%m%d-%H%M%S-%s)
 MONTHLY=$(date +%Y-%m)
-URL=https://dev.alpinelinux.org/irclogs/
-LOGTYPE='devel linux commits docs'
+# URL=https://dev.alpinelinux.org/irclogs/
+URL=https://irclogs.alpinelinux.org/
+# check URL above and update LOGTYPE
+LOGTYPE='devel linux commits docs infra cloud security test'
 _tmpf='/tmp/_tmp_alpine.log'
+LOGSAVEPATH=${PWD}
+HTMLSAVEPATH=${PWD}
 
 SVGColors="aliceblue antiquewhite aqua aquamarine beige bisque
            blanchedalmond blue blueviolet brown burlywood cadetblue
-	   chartreuse chocolate coral cornflowerblue crimson cyan
-	   darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta
-	   darkolivegreen darkorange darkorchid darkred darksalmon
-	   darkseagreen darkslateblue darkturquoise darkviolet deeppink
-	   deepskyblue dimgray dodgerblue firebrick floralwhite forestgreen
-	   fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow
-	   honeydew hotpink indianred khaki lavenderblush lawngreen
-	   lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow
-	   lightgreen lightgrey lightpink lightsalmon lightseagreen
-	   lightskyblue lightslategray lightsteelblue lime limegreen magenta
-	   maroon mediumaquamarine mediumblue mediumorchid mediumpurple
-	   mediumseagreen mediumslateblue mediumspringgreen mediumturquoise
-	   mediumvioletred mintcream mistyrose moccasin navajowhite 
-	   oldlace olive olivedrab orange orangered orchid palegoldenrod
-	   palegreen paleturquoise palevioletred papayawhip peachbuff peru
-	   pink plum powderblue purple red rosybrown royalblue saddlebrown
-	   salmon sandybrown seagreen seashell sienna silver skyblue slateblue
-	   slategray snow springgreen steelblue tan teal thistle tomato
-	   turquoise violet wheat white whitesmoke yellow yellowgreen
-	   "
+           chartreuse chocolate coral cornflowerblue crimson cyan
+           darkcyan darkgoldenrod darkgrey darkgreen darkkhaki darkmagenta
+           darkolivegreen darkorange darkorchid darkred darksalmon
+           darkseagreen darkslateblue darkturquoise darkviolet deeppink
+           deepskyblue dimgray dodgerblue firebrick floralwhite forestgreen
+           fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow
+           honeydew hotpink indianred khaki lavenderblush lawngreen
+           lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow
+           lightgreen lightgrey lightpink lightsalmon lightseagreen
+           lightskyblue lightslategray lightsteelblue lime limegreen magenta
+           maroon mediumaquamarine mediumblue mediumorchid mediumpurple
+           mediumseagreen mediumslateblue mediumspringgreen mediumturquoise
+           mediumvioletred mintcream mistyrose moccasin navajowhite 
+           oldlace olive olivedrab orange orangered orchid palegoldenrod
+           palegreen paleturquoise palevioletred papayawhip peachbuff peru
+           pink plum powderblue purple red rosybrown royalblue saddlebrown
+           salmon sandybrown seagreen seashell sienna silver skyblue slateblue
+           slategray snow springgreen steelblue tan teal thistle tomato
+           turquoise violet wheat white whitesmoke yellow yellowgreen
+           "
 
 header='
 <!DOCTYPE html><html><head>
@@ -81,24 +85,27 @@ ul li span:nth-child(2) {
 ul li span:nth-child(2) { width: 90pt; }
 li:nth-child(even) { background-color: #282828; }
 ul li span:last-child { color: beige; display: block; margin: 0px 0px; }
+span.sort { background-color: white; }
+.searchwrap { font-size: 85%; }
 @media (max-width: 640px) {
-  ul li span:nth-child(3) { display: block; clear: both; padding-left: 12px; }
+  ul li span:nth-child(3) { display: block; clear: both; padding-left: 15px; }
 }
 </style>
-</head>
 EOT
 );
 body='
-<body>
-<ul>
+</head>
+<body><div id="ircchat"><ul class="list">
 ';
-footer='</ul></body></html>';
+footer='</ul>'
+htmlend='</div></body></html>'
 
 al_get_irclog() {
-    file=${URL}"%23alpine-$log-$MONTHLY.log";
+    local _logfile="%23alpine-$log-$MONTHLY.log";
+    local _file=${URL}${_logfile};
     echo -ne "${cLIGHTGRAY}${cbBROWN}>>>${cNORMAL} "
     echo "------------------------------"
-    wget -c $file
+    wget --no-check-certificate -c "$_file" -O "${LOGSAVEPATH}/${_CURRLF}"
 }
 
 _al_irclog2html() {
@@ -107,7 +114,7 @@ _al_irclog2html() {
         -e 's|>|\&gt;|g' \
         -e 's|<|\&lt;|g' \
         -e 's|^|<li><span>|' \
-        -e 's|gt\; |gt; </span><span>|' \
+        -e 's|gt\; |gt; </span><span class="tx">|' \
         -e 's|$|</span></li>|' \
         ${_tmpf}
 
@@ -124,17 +131,18 @@ _al_irclog2html() {
         name=$(echo $name | sed -E 's|\^|\\^|g')
         name=$(echo $name | sed -E 's/\|/\\|/g')
         color=$(echo $SVGColors | awk -v num=$num '{print $num}')
-        _colorstr="</span><span style='color:${color}'>"
+        _colorstr="</span><span class='n' style='color:${color}'>"
         sed -E -i "s|^(<li><span>2[0-9\-]+{9}) ([0-9\:]+{8}) (${name})|\1 \2 ${_colorstr}\3|" \
             ${_tmpf}
         num=$(($num+1))
     done
+    sed -i 's|^<li><span|<li><span class="ts"|' \
+        ${_tmpf}
 }
 
 al_irclog2html() {
     _al_irclog2html
-    _outf=$(echo ${_CURRLF} | cut -b2-).html
-    # _outf=/path/to/htdocs/${_outf}
+    _outf=${HTMLSAVEPATH}/$(echo ${_CURRLF} | cut -b2-).html
 
     echo -e "${cGREEN}>>> creating ... ${cRED}$_outf${cNORMAL}"
     rm -f ${_outf}; touch $_outf
@@ -145,6 +153,7 @@ al_irclog2html() {
     echo ${body} >> ${_outf}
     cat ${_tmpf} >> ${_outf}
     echo $footer >> ${_outf}
+    echo $htmlend >> ${_outf}
 }
 
 usage() {
