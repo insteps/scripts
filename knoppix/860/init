@@ -17,12 +17,15 @@
 
 DISTRO="Knoppix 8.6"
 KVERSION="8.6.0-2019-08-08"
+# KVERS=$(echo ${KVERSION//.} | cut -b -3) # ... cannot do
+KVERS='860' # Short (hardcode)
 
 # Reset fb color mode
 RESET="]R"
 # ANSI COLORS
 # Erase to end of line
-CRE="[K"
+CRE="
+[K"
 # Clear entire screen
 CLEAR="[H[J"
 # Normal color
@@ -410,7 +413,7 @@ message \
   / / _ -  / /||/ / / / / / / ____/ / ____/ / /   /  |     \ _  \     / __ \
  / /  \ \ / / |  / / /_/ / / /     / /     / /   / /\ \   / /_/ / _  / /_/ /
 /_/   |_|/_/  |_/  \____/ /_/     /_/     /_/   /_/ |_|   \____/ /_/ \____/[0m'
-message "${WELCOME}"
+message "${WELCOME} ... /w rambak"
 
 if [ -n "$SPLASH" ] && [ -r /splash.ppm ] && type -p fbi >/dev/null 2>&1; then
  ( fbi -T 6 -1 -noedit -noverbose -t 45 /splash.ppm >/dev/null 2>&1 & )
@@ -933,7 +936,7 @@ check_data_partition(){
       *) datapart="${rootdisk}${part}" ;;
     esac
     [ -b "$datapart" ] || return 2
-    read_only "$datapart" && return 1
+    read_only "$datapart" && return 3 # ... 
     # If we reached this part, the data partition is valid.
     echo "$datapart"
     # Now check if we can resize.
@@ -998,8 +1001,9 @@ mountdata(){
  local img base ext m mods found="" rw="rw"
  local rootdisk="${ROOTDEV%[0-9]}"; rootdisk="${rootdisk%[0-9]}"
  case "$rootdisk" in /dev/mmcblk*) rootdisk="${rootdisk%p}";; esac
- read_only && rw="ro"
- for base in $home /mnt-system/"$knoppix_dir"/knoppix-data /mnt-system/knoppix; do
+ ## read_only && rw="ro" ...
+ ## for base in $home /mnt-system/"$knoppix_dir"/knoppix-data /mnt-system/knoppix; do ...
+ for base in $home /ramdisk/knoppix-data /mnt-system/"$knoppix_dir"/knoppix-data /mnt-system/knoppix; do
   for ext in aes img inf; do
    img="$base.$ext"
    [ -r "$img" ]        || continue
@@ -1014,6 +1018,8 @@ mountdata(){
     ;;
     img)
      checkfs "$img" ext2
+     # ...
+     if [ "${img%/knoppix-data.img}" = '/ramdisk' ]; then rw="rw"; RW="rw"; fi
      message -e "\r${CRE}${GREEN}${USING} ${YELLOW}$img ($rw,loop)${NORMAL}"
      if mount -t ext2 -o loop,$rw "$img" /KNOPPIX-DATA; then
       found="true"
@@ -1060,20 +1066,106 @@ mountdata(){
  return 1
 }
 
+# -----------
+# findrambak devices...
+RAMBAK=""
+findrambak(){
+ local dev RBAKFILE=''
+ local rambakfile=knoppix-data.tar.gz
+ local rambakdata=knoppix-data.img
+ local rambakempty=knoppix-data.img.empty.tar.gz
+ # local rambaksize=3372 # ~3.3GB # for note
+ for d in sda sda1 sdb sdb1 sdc1 sdd1 sde1 sdf1; do
+  dev=/dev/$d
+  [ -b "$dev" ] || continue
+  message -n -e "\r${CRE}${BLUE}trying rambak in: ${MAGENTA}$dev${NORMAL}"
+  # make sure folder rambak exists in USB or BOOT disk/device
+  mount $dev /mnt-system/rambak >/dev/null 2>&1 || continue
+  sleep 1
+  RBAKFILE=/mnt-system/rambak/KNOPPIX${KVERS}/${rambakfile}
+  if [ -r "$RBAKFILE" ]; then
+   RBAKFILE=$RBAKFILE
+  else
+   RBAKFILE=/mnt-system/rambak/${rambakfile}
+  fi
+
+  # --------------------------------------------------------------------
+  # Use 'knoppix-data.img' directly from other media (not knoppix disk)
+  # --------------------------------------------------------------------
+  if checkbootparam "ramdisklink"; then
+   message -n -e "\r${CRE}${BLUE}linking ${rambakdata} image from: ${MAGENTA}$dev${NORMAL}"
+   RAMBAKDISK=/mnt-system/rambak/KNOPPIX${KVERS}/${rambakdata}
+   cd /ramdisk; mkdir tmp
+   if [ -r "$RAMBAKDISK" ]; then
+    ln -s ${RAMBAKDISK} ./ >/dev/null 2>&1 || continue
+    RAMBAK="$dev"; RW="rw"
+    return 0
+   fi
+   message -n -e "\r${CRE}${RED}linking ${rambakdata} image from: ${MAGENTA}$dev${NORMAL} FAILED"
+   umount /mnt-system/rambak >/dev/null 2>&1
+   RAMBAK=""
+   return 1
+  fi
+  # --------------------------------------------------------------------
+  
+  if [ -r "$RBAKFILE" ]; then
+   message -n -e "\r${CRE}${GREEN}${rambakfile} ${FOUNDAT}: ${MAGENTA}$dev${NORMAL}       "
+   cd /ramdisk; mkdir tmp
+   cp $RBAKFILE /ramdisk/
+
+   cp /mnt-system/rambak/${rambakempty} ./
+   tar -zxf ${rambakempty} >/dev/null 2>&1
+   mount -t ext2 -o loop,rw ${rambakdata} tmp >/dev/null 2>&1 || continue
+
+   cd tmp; tar -zxf "/ramdisk/${rambakfile}" >/dev/null 2>&1
+   cd /ramdisk; umount tmp >/dev/null 2>&1
+   # rm -f "/ramdisk/${rambakfile}" "/ramdisk/${rambakempty}" #leave for trace
+   RAMBAK="$dev"; RW="rw"
+   return 0
+  fi
+  message -e "\r${CRE}${RED}NOT IN: ${MAGENTA}$dev${NORMAL}       "
+  umount /mnt-system/rambak >/dev/null 2>&1
+  RAMBAK=""
+ done
+ return 1
+}
+
 mountknoppix(){
- local k dev dir count=0 RC=0
+ local k dev dir count=0 RC=0 k2 dev2 dir2 k3 dev3 dir3 # ...
  [ -b /dev/cloop ] || mknod -m 644 /dev/cloop b 240 0
  grep -q cloop /proc/devices     || insmod /mnt-system/"$knoppix_dir"/modules/cloop.ko preload=32 || return 2
  grep -q aufs  /proc/filesystems || insmod /mnt-system/"$knoppix_dir"/modules/aufs.ko || return 3
+ modprobe loop
+ grep -q squashfs  /proc/filesystems || insmod /mnt-system/"$knoppix_dir"/modules/squashfs.ko || return 3
+ local bn bd bkname bnum k2dir k2dirmnt k3dir k3dirmnt
+ # Note dummy file KNOPPIX<num> (cloop format) need to be present
+ # in KNOPPIX/ or KNOPPIX${KVERS}/ for .sfs and .d directories to get activated.
  for k in /mnt-system/"$knoppix_dir"/[Kk][Nn][Oo][Pp][Pp][Ii][Xx] \
-          /mnt-system/"$knoppix_dir"/[Kk][Nn][Oo][Pp][Pp][Ii][Xx][0-9]; do
+          /mnt-system/"$knoppix_dir"/[Kk][Nn][Oo][Pp][Pp][Ii][Xx][0-9] \
+          /mnt-system/rambak/KNOPPIX${KVERS}/[Kk][Nn][Oo][Pp][Pp][Ii][Xx][0-9]; do
+  bd=$(dirname $k)
+  bn=$(basename $k)
+  # bkname=$(echo $bn | cut -b -5)     # format [Kk][Nn][Oo][Pp][Pp][Ii][Xx]
+  # bnum=${bn//[KkNnOoPpPpIiXx]/}      # format [0-9]
+  k2dir=${bd}'.sf4'                    # format <dirname>.sf4
+  k2=${k2dir}'/'${bn}'.sf4'            # format <dirname>.sf4/KNOPPIX<num>.sf4
+  k3dir=${bd}'.d'                      # format <dirname>.d
+  k3=${k3dir}'/'${bn}'.d'              # format <dirname>.d/KNOPPIX<num>.d
+
   [ -r "$k" ] || continue
   check_knoppix "$k"
   if [ $count = 0 ]; then
-   dev=/dev/cloop ; dir=/KNOPPIX
+   dev=/dev/cloop; dir=/KNOPPIX
+   dev2=/dev/loop; dir2='/KNOPPIX.sf4'
+   dev3=$k3dir; dir3=/KNOPPIX.d  # for -bind mounting
   else
-   dev=/dev/cloop$count ; dir=/KNOPPIX$count
+   dev=/dev/cloop$count; dir=/KNOPPIX$count
    [ -b $dev ] || mknod -m 644 $dev b 240 $count
+   dev2=/dev/loop$count ; dir2='/KNOPPIX'"$count"'.sf4'
+   # add /dev/loop devices
+   # [ -b $dev2 ] || mknod -m 640 $dev2 b 7 $count # not needed
+   dev3=$k3; dir3='/KNOPPIX'"$count"'.d'  # for -bind mounting
+
    [ -d $dir ] || mkdir -m 755 $dir
   fi
   if ! losetup $dev $k >/dev/null 2>&1 || ! mount -r -t iso9660 $dev $dir >/dev/null 2>&1; then
@@ -1083,16 +1175,50 @@ mountknoppix(){
    umountknoppix
    return 4
   fi
+  if [ -r "$k2" ]; then
+   echo -n -e "${GREEN} $(basename $k2) ${NORMAL}"
+   [ -d $dir2 ] || mkdir -m 755 $dir2
+#   if ! losetup $dev2 $k2 >/dev/null 2>&1 || ! mount -r -t squashfs $dev2 $dir2 >/dev/null 2>&1; then
+   if ! mount -r -t squashfs $k2 $dir2 >/dev/null 2>&1; then
+    echo "============= ERROR: $k2 ============="
+    # Verbose error message
+    echo -n -e "\n\r${RED}${BROKENIMAGE}: $k2 ${ON} "; mount | grep /mnt-system; dmesg | tail | grep ' loop'; echo -n "${NORMAL}"
+    umountknoppixsfs
+   fi
+  fi
+  if [ -r "$k3" ]; then
+   echo -n -e "${YELLOW} $(basename $k3) ${NORMAL}"
+   [ -d $dir3 ] || mkdir -m 755 $dir3
+   # if ! mount -o bind,ro $k3 $dir3 >/dev/null 2>&1; then # mount(8) since v2.27
+   if ! mount -r -o bind $k3 $dir3 >/dev/null 2>&1; then
+    echo "============= ERROR: $k3 ============="
+    # Verbose error message
+    echo -n -e "\n\r${RED}${BROKENIMAGE}: $k3 ${ON} "; mount | grep /mnt-system; dmesg | tail | grep '.d'; echo -n "${NORMAL}"
+    umountknoppixd
+   fi
+  fi
+
   let count++
  done
  return 0
 }
 
-# Release all Knoppix compressed file systems
+# Release all Knoppix compressed/readonly file systems # ...
 umountknoppix(){
  for dev in /dev/cloop*; do
   umount -f "$dev" >/dev/null 2>&1
   losetup -d "$dev" >/dev/null 2>&1
+ done
+}
+umountknoppixsfs(){  # sf4 ...
+ for dev in /dev/loop*; do
+  umount -f "$dev" >/dev/null 2>&1
+  losetup -d "$dev" >/dev/null 2>&1
+ done
+}
+umountknoppixd(){  # .d dirs ...
+ for dev in /KNOPPIX*.d; do
+  umount -f "$dev" >/dev/null 2>&1
  done
 }
 
@@ -1108,13 +1234,31 @@ remountroot(){
 }
 
 mountunion(){
- local dir tree=""
+ local dir tree="" d2="" d3=""  # ...
  for dir in /KNOPPIX /KNOPPIX[0-9]; do
+  d2=$dir'.sf4'; d3=$dir'.d'
   [ -d "$dir" ] && tree="$dir=ro${tree:+:$tree}"
+  [ -d "$d2" ] && tree="$d2=ro${tree:+:$tree}" # ...
+  [ -d "$d3" ] && tree="$d3=ro${tree:+:$tree}"
  done
+ # echo "========== $tree =========="
  mount -t aufs -o "br:$1:$tree,noplink" unionfs /UNIONFS
  return $?
 }
+
+# -----------
+message -n -e "${CRE}${RED}Trying to find rambak disk...${NORMAL}"
+# -----------
+if findrambak; then
+  message -e "${CRE}${BLUE}knoppix-data.img found, rambak disk mounted...${NORMAL}"
+  RW="rw"
+else
+  message -e "${CRE}${BLUE}Trying to rsync root.overlay on ${MAGENTA}/ramdisk${BLUE}...${NORMAL}"
+  # tar -zxf /mnt-system/rambak/root.overlay.tar.gz -C / > /dev/null 2>&1 
+fi
+sleep 4
+# -----------
+
 
 if mountknoppix; then # compressed
  checkbootparam "debug" && debugshell "Past mounting /KNOPPIX."
@@ -1135,17 +1279,22 @@ if mountknoppix; then # compressed
      1) message "${CRE}${RED}KNOPPIX-DATA Partition $data_partition exists, but cannot be used.${NORMAL}" ;; 
      0) message "${CRE}${GREEN}KNOPPIX-DATA Partition $data_partition OK${NORMAL}";;
   esac
+  message -e "\r${CRE}${RED}1.dstat -> $dstat${NORMAL}"
   if [ "$dstat" != 1 -a "$dstat" != 2 ] && mountdata; then
    checkbootparam "debug" && debugshell "Past mounting /KNOPPIX-DATA."
-   if [ "$RW" = "ro" ] || read_only "$ROOTDEV"; then
+   # if [ "$RW" = "ro" ] || read_only "$ROOTDEV"; then # ...
+   if [ "$RW" = "ro" ]; then
+    message -n -e "\r${CRE}${RED}Still RO...${NORMAL}"
     mountunion /ramdisk=rw:/KNOPPIX-DATA=ro
    else
+    message -n -e "\r${CRE}${BLUE}Final attempt to get RW right. ...${NORMAL}"
     mountunion /KNOPPIX-DATA=rw
    fi
   else
    mountunion /ramdisk=rw
   fi
  else
+  message -e "\r${CRE}${RED}2.dstat -> $dstat${NORMAL}"
   mountunion /ramdisk=rw
   if [ -n "$SETRO" ]; then
    # Set all partitions on root disk to read-only
@@ -1208,8 +1357,9 @@ esac
 
 checkbootparam "debug" && debugshell "Past symlinks to /UNIONFS."
 
-# Check for updates on-disk, install them if necessary.
-ls /mnt-system/KNOPPIX/update*.zip /mnt-system/KNOPPIX/update*.tar.gz /mnt-system/KNOPPIX/update*.taz 2>/dev/null | while read update; do
+# Check for updates on-disk, install them if necessary. Add rambak ... 
+# ls /mnt-system/KNOPPIX/update*.zip /mnt-system/KNOPPIX/update*.tar.gz /mnt-system/KNOPPIX/update*.taz 2>/dev/null | while read update; do
+ls /mnt-system/rambak/KNOPPIX"$KVERS"/update*.tar.gz /mnt-system/KNOPPIX/update*.zip /mnt-system/KNOPPIX/update*.tar.gz /mnt-system/KNOPPIX/update*.taz 2>/dev/null | while read update; do
  if [ -r "$update" ]; then
   message -e "\r${CRE}${GREEN}${UPDATING} ${YELLOW}$update${NORMAL}"
   case "$update" in
@@ -1218,6 +1368,8 @@ ls /mnt-system/KNOPPIX/update*.zip /mnt-system/KNOPPIX/update*.tar.gz /mnt-syste
   esac
  fi
 done
+
+export RAMBAK=$RAMBAK
 
 # Before starting init: check for "adriane" or "secure" bootoption
 CONFS="/etc/inittab /etc/sudoers /etc/PolicyKit/PolicyKit.conf"
