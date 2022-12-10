@@ -72,10 +72,10 @@ header='
 style=$(cat <<EOT
 <style type="text/css">
 body { font-family:Arial,Helvetica,sans-serif;
-       font-size: 1em; background-color: black; }
+       font-size: .9em; background-color: black; }
 ul { width: 98%; margin: 0px; padding: 0px; }
 ul li { padding: 3px; list-style: none; list-style-type: none;
-        margin: 0px; padding: 0px; border: 1px solid black; clear: both; }
+        margin: 0px; padding: 2px; border: 1px solid black; clear: both; }
 ul li span:first-child, 
 ul li span:nth-child(2) {
   white-space: nowrap; font-weight: bold; font-size: .8em;
@@ -88,7 +88,7 @@ ul li span:last-child { color: beige; display: block; margin: 0px 0px; }
 span.sort { background-color: white; }
 .searchwrap { font-size: 85%; }
 @media (max-width: 640px) {
-  ul li span:nth-child(3) { display: block; clear: both; padding-left: 15px; }
+  ul li span:nth-child(3) { display: block; clear: both; padding-left: 10px; }
 }
 </style>
 EOT
