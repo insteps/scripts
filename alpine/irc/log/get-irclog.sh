@@ -31,8 +31,8 @@
 PROGRAM=get-irclog
 VERSION=0.0.2
 
-NOW=$(date +%Y%m%d-%H%M%S-%s)
-MONTHLY=$(date +%Y-%m)
+NOW=$(date -u +%Y%m%d-%H%M%S-%s)
+MONTHLY=$(date -u +%Y-%m)
 # URL=https://dev.alpinelinux.org/irclogs/
 URL=https://irclogs.alpinelinux.org/
 # check URL above and update LOGTYPE
