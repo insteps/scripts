@@ -98,6 +98,23 @@ body='
 <body><div id="ircchat"><ul class="list">
 ';
 footer='</ul>'
+search='
+  <div class="searchwrap"><input class="search" />
+  <span class="sort" data-sort="ts">[TimeStamp]</span>
+  <span class="sort" data-sort="n">[Name]</span>
+  <span class="sort" data-sort="tx">[Text]</span></div>
+<script src="list.min.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+setTimeout(function() {
+var options = {
+    valueNames: [ "ts", "n", "tx" ]
+};
+var ircchat = new List("ircchat", options);
+}, 1000);
+/*]]>*/
+</script>
+';
 htmlend='</div></body></html>'
 
 al_get_irclog() {
@@ -153,6 +170,7 @@ al_irclog2html() {
     echo ${body} >> ${_outf}
     cat ${_tmpf} >> ${_outf}
     echo $footer >> ${_outf}
+    # echo $search >> ${_outf}
     echo $htmlend >> ${_outf}
 }
 
